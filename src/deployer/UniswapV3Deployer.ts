@@ -1,6 +1,7 @@
 import { Signer, Contract, ContractFactory } from "ethers";
 import { linkLibraries } from "../util/linkLibraries";
 import WETH9 from "../util/WETH9.json";
+import { asciiStringToBytes32 } from "../util/asciiStringToBytes32";
 
 type ContractJson = { abi: any; bytecode: string };
 const artifacts: { [name: string]: ContractJson } = {
@@ -21,17 +22,21 @@ export class UniswapV3Deployer {
     const deployer = new UniswapV3Deployer(actor);
 
     const weth9 = await deployer.deployWETH9();
+    const weth9Addr = await weth9.getAddress();
     const factory = await deployer.deployFactory();
-    const router = await deployer.deployRouter(factory.address, weth9.address);
+    const factoryAddr = await factory.getAddress();
+    const router = await deployer.deployRouter(factoryAddr, weth9Addr);
     const nftDescriptorLibrary = await deployer.deployNFTDescriptorLibrary();
+    const nftDescriptorLibraryAddr = await nftDescriptorLibrary.getAddress();
     const positionDescriptor = await deployer.deployPositionDescriptor(
-      nftDescriptorLibrary.address,
-      weth9.address
+      nftDescriptorLibraryAddr,
+      weth9Addr
     );
+    const positionDescriptorAddr = await positionDescriptor.getAddress();
     const positionManager = await deployer.deployNonfungiblePositionManager(
-      factory.address,
-      weth9.address,
-      positionDescriptor.address
+      factoryAddr,
+      weth9Addr,
+      positionDescriptorAddr
     );
 
     return {
@@ -98,7 +103,7 @@ export class UniswapV3Deployer {
             NFTDescriptor: [
               {
                 length: 20,
-                start: 1261,
+                start: 1681,
               },
             ],
           },
@@ -112,7 +117,7 @@ export class UniswapV3Deployer {
     return (await this.deployContract(
       artifacts.NonfungibleTokenPositionDescriptor.abi,
       linkedBytecode,
-      [weth9Address],
+      [weth9Address, asciiStringToBytes32("WETH")],
       this.deployer
     )) as Contract;
   }
@@ -137,6 +142,8 @@ export class UniswapV3Deployer {
     actor: Signer
   ) {
     const factory = new ContractFactory(abi, bytecode, actor);
-    return await factory.deploy(...deployParams);
+    const contract = await factory.deploy(...deployParams);
+    return contract as T;
+    // return contract;
   }
 }

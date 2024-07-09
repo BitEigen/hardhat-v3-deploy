@@ -1,5 +1,4 @@
 import { task } from "hardhat/config";
-import "@nomiclabs/hardhat-ethers";
 import "./type-extensions";
 
 import Table from "cli-table3";
@@ -15,7 +14,7 @@ task("deploy-uniswap", "Deploys Uniswap V3 contracts", async (args, hre) => {
     style: { border: [] },
   });
   for (const item of Object.keys(contracts)) {
-    table.push([item, contracts[item].address]);
+    table.push([item, await contracts[item].getAddress()]);
   }
   console.info(table.toString());
 });

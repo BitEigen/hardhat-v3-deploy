@@ -5,7 +5,7 @@ library when you're working with the contract ABI/bytecode.
 See https://github.com/ethers-io/ethers.js/issues/195
 */
 
-import { utils } from 'ethers'
+import { ethers } from "ethers"
 
 export const linkLibraries = (
   {
@@ -26,10 +26,11 @@ export const linkLibraries = (
       if (!libraries.hasOwnProperty(contractName)) {
         throw new Error(`Missing link library name ${contractName}`)
       }
-      const address = utils
+      const address = ethers
         .getAddress(libraries[contractName])
         .toLowerCase()
         .slice(2)
+
       linkReferences[fileName][contractName].forEach(
         ({ start: byteStart, length: byteLength }) => {
           const start = 2 + byteStart * 2
@@ -44,3 +45,4 @@ export const linkLibraries = (
   })
   return bytecode
 }
+
